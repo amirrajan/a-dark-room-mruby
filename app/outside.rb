@@ -1,0 +1,3 @@
+class Outside
+
+end
