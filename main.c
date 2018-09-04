@@ -1,21 +1,36 @@
+#include <execinfo.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <mruby.h>
 #include <mruby/variable.h>
 #include <mruby/string.h>
 #include <mruby/irep.h>
-#include "index.c"
-#include <stdio.h>
+#include "main_ruby.c"
 
-int
-main(void)
+void handler(int sig)
 {
+  void *array[10];
+  size_t size;
+  size = backtrace(array, 10);
+  fprintf(stderr, "Error: signal %d:\n", sig);
+  backtrace_symbols_fd(array, size, STDERR_FILENO);
+  exit(1);
+}
+
+int main()
+{
+  signal(SIGSEGV, handler);
+
   mrb_state *mrb = mrb_open();
-  mrb_load_irep(mrb, index);
+  mrb_load_irep(mrb, main_ruby);
   struct RClass *testClass = mrb_class_get(mrb, "Tests");
   mrb_value tests =
     mrb_funcall(mrb,
 		mrb_obj_value(testClass),
 		"new",
 		0);
+
   mrb_funcall(mrb,
 	      tests,
 	      "run",
