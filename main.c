@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <mruby.h>
+#include <mruby/error.h>
 #include <mruby/variable.h>
 #include <mruby/string.h>
 #include <mruby/irep.h>
@@ -24,7 +25,7 @@ int main()
 
   mrb_state *mrb = mrb_open();
   mrb_load_irep(mrb, main_ruby);
-  struct RClass *testClass = mrb_class_get(mrb, "Tests");
+  struct RClass *testClass = mrb_class_get(mrb, "RoomTests");
   mrb_value tests =
     mrb_funcall(mrb,
 		mrb_obj_value(testClass),
@@ -37,9 +38,7 @@ int main()
 	      0);
 
   if (mrb->exc) {
-    mrb_value obj = mrb_funcall(mrb, mrb_obj_value(mrb->exc), "inspect", 0);
-    fwrite(RSTRING_PTR(obj), RSTRING_LEN(obj), 1, stdout);
-    putc('\n', stdout);
+    mrb_print_error(mrb);
   }
 
   mrb_close(mrb);
