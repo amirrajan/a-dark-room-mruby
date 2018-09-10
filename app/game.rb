@@ -55,7 +55,7 @@ class Game
 
     # @history << "awake. head throbbing. the voices say to survive." if @tick_count == 1
 
-    # @tick_count += 1
+    @tick_count += 1
 
     # @tick_history.clear
     # difference = @history.count - @last_history_count

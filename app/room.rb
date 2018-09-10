@@ -113,6 +113,22 @@ class Room
     cost_for[action][:wood] <= @stores[:wood]
   end
 
+  def cool_fire_after
+    @cool_fire_after
+  end
+
+  def change_room_temp
+    @current_room_temp_ticks += 1
+
+    return if @current_room_temp_ticks != @room_temp_changes_after
+
+    limit_reached = @room_temps[@temperature][:value] >= @fire_states[@fire][:value]
+    limit_exceeded = @room_temps[@temperature][:value] > @fire_states[@fire][:value]
+    @temperature = @room_temps[@temperature][:next] unless limit_reached
+    @temperature = @room_temps[@temperature][:prev] if limit_exceeded
+    @current_room_temp_ticks = 0
+  end
+
   def light_fire
     return false if !has_funds_for :light_fire
 
@@ -131,6 +147,37 @@ class Room
     return if begining_of_game
 
     @stores[:wood] -= cost_for[action][:wood]
+  end
+
+  def update_builder_status
+    return if @builder_status > 3
+
+    @current_builder_status_ticks += 1
+
+    if @current_builder_status_ticks == 15 and @builder_status == 1
+      unlock_forest
+    end
+
+    if @builder_status == -1 and !fire_is_out?
+      @builder_status += 1
+    end
+
+    return if @current_builder_status_ticks != @builder_status_change_after
+
+    if @builder_status == 0 and !fire_is_out?
+      @history << "a ragged stranger stumbles through the door and collapses in the corner."
+      @builder_status += 1
+    elsif @builder_status == 1 and [:warm, :hot].include? @temperature
+      @history << "the stranger shivers, and mumbles quietly. her words are unintelligible."
+      @builder_status += 1
+    elsif @builder_status == 2 and [:warm, :hot].include? @temperature
+      @history << "the stranger in the corner stops shivering. her breathing calms."
+      @builder_status += 1
+    elsif @builder_status == 3
+      @builder_status += 1
+    end
+
+    @current_builder_status_ticks = 0
   end
 
   def unlock_forest
@@ -154,6 +201,14 @@ class Room
     @stoke_ready_after
   end
 
+  def builder_status_change_after
+    @builder_status_change_after
+  end
+
+  def forest_unlocked?
+    @forest_unlocked
+  end
+
   def tick_stoke
     return if fire_is_out?
 
@@ -162,16 +217,25 @@ class Room
     @current_stoke_ticks += 1
   end
 
+  def cool_fire
+    @current_cool_fire_ticks += 1
+
+    return if @current_cool_fire_ticks != @cool_fire_after
+
+    @fire = @fire_states[@fire][:prev]
+    @current_cool_fire_ticks = 0
+  end
+
   def tick
-    # cool_fire
+    cool_fire
 
-    # change_room_temp
+    change_room_temp
 
-    # update_builder_status
+    update_builder_status
 
-    # record_fire_state
+    record_fire_state
 
-    # record_room_temp
+    record_room_temp
 
     tick_stoke
 
@@ -206,8 +270,19 @@ class Room
     "a firelit room"
   end
 
+  def room_temp_changes_after
+    @room_temp_changes_after
+  end
+
   def fire_is_out?
     @fire == :dead
+  end
+
+  def record_room_temp
+    if @previous_temperature != @temperature
+      @history << "the room is #{ @temperature.to_s }."
+      @previous_temperature = @temperature
+    end
   end
 
   def cost_for
