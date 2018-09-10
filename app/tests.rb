@@ -62,4 +62,16 @@ class Tests
       raise "#{message}\n[#{actual}] of type [#{actual.class}] did not equal [#{expected}] of type [#{expected.class}]."
     end
   end
+
+  def assert_contains list, expected, message = nil
+    found = false
+
+    list.each do |i|
+      found = true if i == expected
+    end
+
+    if !found
+      raise "#{message}\n[#{expected}] was not contained in:\n\n#{list.join("\n")}"
+    end
+  end
 end
