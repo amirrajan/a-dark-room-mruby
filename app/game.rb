@@ -44,12 +44,29 @@ class Game
     @outside.solo_run?
   end
 
+  def slaves?
+    return @outside.story_displayed.any? { |s| s.include?("slaves") }
+  end
+
+  def builder_gather_rate
+    5
+  end
+
+  def builder_gathers_wood
+    return if @stores[:her_locket]
+    return if !@room.builder_ready?
+    return if (@tick_count % 10) != 0
+
+    @stores[:wood] ||= 0
+    @stores[:wood] += builder_gather_rate
+  end
+
   def tick
     @room.tick
     @outside.tick
     # @events.tick if(white_listed_modules.include? @active_module)
     # @world.tick
-    # builder_gathers_wood
+    builder_gathers_wood
 
     # if @world.ship_cleared?
     #   if @current_lift_off_ticks < @lift_off_after

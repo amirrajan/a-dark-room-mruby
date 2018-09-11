@@ -26,19 +26,19 @@ class Outside
     @increase_population_after = 0
     @current_increase_population_ticks = 0
 
-    # @income = {
-    #   :gatherer => Gatherer.new,
-    #   :hunter => Hunter.new,
-    #   :trapper => Trapper.new,
-    #   :tanner => Tanner.new,
-    #   :charcutier => Charcutier.new,
-    #   :steelworker => Steelworker.new,
-    #   :armourer => Armourer.new,
-    #   :iron_miner => IronMiner.new,
-    #   :coal_miner => CoalMiner.new,
-    #   :sulphur_miner => SulphurMiner.new,
-    #   :thieves => Thieves.new
-    # }
+    @income = {
+      :gatherer => Gatherer.new,
+      :hunter => Hunter.new,
+      :trapper => Trapper.new,
+      :tanner => Tanner.new,
+      :charcutier => Charcutier.new,
+      :steelworker => Steelworker.new,
+      :armourer => Armourer.new,
+      :iron_miner => IronMiner.new,
+      :coal_miner => CoalMiner.new,
+      :sulphur_miner => SulphurMiner.new,
+      :thieves => Thieves.new
+    }
 
     schedule_next_population_increase
   end
@@ -198,6 +198,30 @@ class Outside
     return false if @thieves_gone
 
     !@thieves_stores[:wood].nil?
+  end
+
+  def income
+    @income
+  end
+
+  def workers
+    @workers
+  end
+
+  def allocate_worker worker
+    return if @workers[:gatherer] == 0
+
+    @workers[:gatherer] -= 1
+
+    @workers[worker] += 1
+  end
+
+  def deallocate_worker worker
+    return if @workers[worker] == 0
+
+    @workers[:gatherer] += 1
+
+    @workers[worker] -= 1
   end
 
   def builder_left?
@@ -493,8 +517,43 @@ class Outside
     @current_check_traps_ticks += 1
   end
 
+  def worker_count
+    @workers.keys.map { |k| @workers[k] }.inject(:+)
+  end
+
+  def tick_income
+    return if !@workers[:gatherer]
+
+    if worker_count != @population
+      @workers[:gatherer] += @population - worker_count
+    end
+
+    @workers.keys.each do |worker|
+      @income[worker].apply @workers[worker], @stores
+    end
+
+    if thieves?
+      @income[:thieves].apply 1, @stores, @thieves_stores
+    end
+  end
+
+  def tick_population
+    #no tests for this, ensures that population doesn't immediatly increase after the first hut is built
+    return if hut_count == 0
+
+    @current_increase_population_ticks += 1
+
+    return if @current_increase_population_ticks < @increase_population_after
+
+    increase_population
+
+    schedule_next_population_increase
+  end
+
   def tick
     gather_wood_tick
     check_traps_tick
+    tick_population
+    tick_income
   end
 end
