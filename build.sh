@@ -11,11 +11,12 @@ cat ./app/room.rb >> ./main_ruby.rb
 cat ./app/outside.rb >> ./main_ruby.rb
 cat ./app/game.rb >> ./main_ruby.rb
 cat ./app/world.rb >> ./main_ruby.rb
-cat ./app/tests.rb >> ./main_ruby.rb
-cat ./app/crafting_tests.rb >> ./main_ruby.rb
-cat ./app/outside_tests.rb >> ./main_ruby.rb
-cat ./app/room_tests.rb >> ./main_ruby.rb
-cat ./app/income_tests.rb >> ./main_ruby.rb
+
+cat ./tests/tests.rb >> ./main_ruby.rb
+cat ./tests/crafting_tests.rb >> ./main_ruby.rb
+cat ./tests/outside_tests.rb >> ./main_ruby.rb
+cat ./tests/room_tests.rb >> ./main_ruby.rb
+cat ./tests/income_tests.rb >> ./main_ruby.rb
 
 ./mruby/bin/mrbc -Bmain_ruby ./main_ruby.rb
 

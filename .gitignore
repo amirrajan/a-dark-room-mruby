@@ -5,3 +5,5 @@
 /adr-engine
 /main_ruby.c
 /main_ruby.rb
+/.DS_Store
+/app/.DS_Store
