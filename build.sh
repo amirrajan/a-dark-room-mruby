@@ -1,6 +1,19 @@
-pkill adr-endine
+pkill adr-engine
 
-cat ./app/* > ./main_ruby.rb
+cat ./app/debugging.rb > ./main_ruby.rb
+cat ./app/cost_string.rb >> ./main_ruby.rb
+cat ./app/stores.rb >> ./main_ruby.rb
+cat ./app/crafts.rb >> ./main_ruby.rb
+cat ./app/trades.rb >> ./main_ruby.rb
+cat ./app/tools.rb >> ./main_ruby.rb
+cat ./app/room.rb >> ./main_ruby.rb
+cat ./app/outside.rb >> ./main_ruby.rb
+cat ./app/game.rb >> ./main_ruby.rb
+cat ./app/world.rb >> ./main_ruby.rb
+cat ./app/tests.rb >> ./main_ruby.rb
+cat ./app/crafting_tests.rb >> ./main_ruby.rb
+cat ./app/outside_tests.rb >> ./main_ruby.rb
+cat ./app/room_tests.rb >> ./main_ruby.rb
 
 ./mruby/bin/mrbc -Bmain_ruby ./main_ruby.rb
 

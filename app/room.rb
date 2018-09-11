@@ -327,7 +327,7 @@ class Room
 
     tick_stoke
 
-    # unlock_crafts
+    unlock_crafts
 
     # unlock_trades
 

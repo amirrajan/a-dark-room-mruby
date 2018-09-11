@@ -28,7 +28,7 @@ class Game
     @outside = Outside.new @history, @stores, @buildings, @workers, self
     @world = World.new self
     # @game_state = GameState.new self
-    # @cost_string = CostString.new
+    @cost_string = CostString.new
     @last_history_count = 0
   end
 

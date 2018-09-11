@@ -7,9 +7,13 @@ class Tests
   end
 
   def run
+    puts "# #{self.class.to_s}"
     define_tests
 
+    puts ""
+
     @specifies.each do |k, v_tuple|
+      puts "- #{k}"
       before_index, specify_it = v_tuple
       begin
         if before_index != -1
@@ -27,6 +31,8 @@ class Tests
         raise e
       end
     end
+
+    puts ""
 
     return true
   end
@@ -57,9 +63,27 @@ class Tests
     assert @game.room.title, "a dark room"
   end
 
+  def assert_not actual, expected, message = nil
+    if actual == expected
+      raise "`assert_not` failure: #{message}\n[#{actual}] of type [#{actual.class}] equaled [#{expected}] of type [#{expected.class}]."
+    end
+  end
+
   def assert actual, expected, message = nil
     if actual != expected
-      raise "#{message}\n[#{actual}] of type [#{actual.class}] did not equal [#{expected}] of type [#{expected.class}]."
+      raise "`assert` failure:#{message}\n[#{actual}] of type [#{actual.class}] did not equal [#{expected}] of type [#{expected.class}]."
+    end
+  end
+
+  def assert_nil o, message = nil
+    if !o.nil?
+      raise "`assert_nil` failure: #{message}\nExpected [#{o}] to be nil, but was of type [#{o.class}]."
+    end
+  end
+
+  def assert_not_nil o, message = nil
+    if o.nil?
+      raise "`assert_not_nil` failure: #{message}\nExpected object that was passed in to not be nil."
     end
   end
 
@@ -71,7 +95,7 @@ class Tests
     end
 
     if !found
-      raise "#{message}\n[#{expected}] was not contained in:\n\n#{list.join("\n")}"
+      raise "`assert_contains` failure: #{message}\n[#{expected}] was not contained in:\n\n#{list.join("\n")}"
     end
   end
 end

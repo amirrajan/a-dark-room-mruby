@@ -44,8 +44,10 @@ int main()
 
   mrb_state *mrb = mrb_open();
   mrb_load_irep(mrb, main_ruby);
+  printf("\n");
   run_test_class("RoomTests", mrb);
   run_test_class("OutsideTests", mrb);
+  run_test_class("CraftingTests", mrb);
 
   mrb_close(mrb);
   return 0;
