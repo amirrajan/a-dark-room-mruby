@@ -49,6 +49,9 @@ int main()
   run_test_class("OutsideTests", mrb);
   run_test_class("CraftingTests", mrb);
   run_test_class("IncomeTests", mrb);
+  run_test_class("ToolsTests", mrb);
+  run_test_class("PopulationTests", mrb);
+  run_test_class("ThievesTests", mrb);
 
   mrb_close(mrb);
   return 0;

@@ -60,47 +60,51 @@ class Room
       :armoury => Armoury.new(@buildings),
     }
 
-    #if anything is added to this list, make sure to add an entry to game.rb/def order
-    # @trades = {
-    #   :bait => Bait.new,
-    #   :scales => Scales.new,
-    #   :teeth => Teeth.new,
-    #   :compass => Compass.new,
-    #   :leather => Leather.new,
-    #   :cured_meat => CuredMeat.new,
-    #   :bolas =>  Bolas.new,
-    #   :iron => Iron.new,
-    #   :coal => Coal.new,
-    #   :steel => Steel.new,
-    #   :bullets => Bullets.new,
-    #   :grenade => Grenade.new,
-    #   :battery => Battery.new,
-    #   :katana => Katana.new,
-    #   :alien_alloy => AlienAlloy.new
-    # }
+    # if anything is added to this list, make sure to add an entry to game.rb/def order
+    @trades = {
+      :bait => Bait.new,
+      :scales => Scales.new,
+      :teeth => Teeth.new,
+      :compass => Compass.new,
+      :leather => Leather.new,
+      :cured_meat => CuredMeat.new,
+      :bolas =>  Bolas.new,
+      :iron => Iron.new,
+      :coal => Coal.new,
+      :steel => Steel.new,
+      :bullets => Bullets.new,
+      :grenade => Grenade.new,
+      :battery => Battery.new,
+      :katana => Katana.new,
+      :alien_alloy => AlienAlloy.new
+    }
 
-    #if anything is added to this list, make sure to add an entry to game.rb/def order
-    # @tools = {
-    #   :bone_spear => BoneSpear.new,
-    #   :torch => Torch.new,
-    #   :waterskin => Waterskin.new,
-    #   :rucksack => Rucksack.new,
-    #   :leather_armour => LeatherArmour.new,
-    #   :iron_sword => IronSword.new,
-    #   :cask => Cask.new,
-    #   :wagon => Wagon.new,
-    #   :iron_armour => IronArmour.new,
-    #   :steel_sword =>  SteelSword.new,
-    #   :water_tank => WaterTank.new,
-    #   :convoy => Convoy.new,
-    #   :steel_armour => SteelArmour.new,
-    #   :rifle => Rifle.new,
-    #   :war_mantle => WarMantle.new
-    # }
+    # if anything is added to this list, make sure to add an entry to game.rb/def order
+    @tools = {
+      :bone_spear => BoneSpear.new,
+      :torch => Torch.new,
+      :waterskin => Waterskin.new,
+      :rucksack => Rucksack.new,
+      :leather_armour => LeatherArmour.new,
+      :iron_sword => IronSword.new,
+      :cask => Cask.new,
+      :wagon => Wagon.new,
+      :iron_armour => IronArmour.new,
+      :steel_sword =>  SteelSword.new,
+      :water_tank => WaterTank.new,
+      :convoy => Convoy.new,
+      :steel_armour => SteelArmour.new,
+      :rifle => Rifle.new,
+      :war_mantle => WarMantle.new
+    }
 
     @available_crafts = Hash.new
     @available_trades = Hash.new
     @available_tools = Hash.new
+  end
+
+  def tools
+    @tools
   end
 
   def builder_ready
@@ -314,6 +318,33 @@ class Room
     @current_cool_fire_ticks = 0
   end
 
+  def unlock_tools
+    return if !@buildings[:workshop]
+
+    @tools.keys.map { |key| unlock_tool key }
+  end
+
+  def unlock_tool tool_key
+    return if @available_tools[tool_key]
+
+    return if !see_purchaseable? @tools[tool_key]
+
+    return if !@tools[tool_key].meets_prerequisite? @available_tools
+
+    to_unlock = @tools[tool_key]
+
+    @available_tools[tool_key] = to_unlock
+  end
+
+  def unlock_trades
+    @trades.keys.each do |key|
+      trade = @trades[key]
+      store_key = trade.available_if
+
+      @available_trades[key] ||= 0 if @stores[store_key]
+    end
+  end
+
   def tick
     cool_fire
 
@@ -329,9 +360,9 @@ class Room
 
     unlock_crafts
 
-    # unlock_trades
+    unlock_trades
 
-    # unlock_tools
+    unlock_tools
   end
 
   def stoke

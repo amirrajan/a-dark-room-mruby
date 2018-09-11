@@ -54,7 +54,6 @@ class Tests
   end
 
   def new_game
-    puts "newing up game"
     @game = Game.new
   end
 

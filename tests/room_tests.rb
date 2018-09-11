@@ -1,5 +1,3 @@
-class Tests; end
-
 class RoomTests < Tests
   def hello_room
     before do
@@ -40,7 +38,7 @@ class RoomTests < Tests
       assert @game.room.light_fire, false, "Can fire be lit once forest is unlocked and no wood?"
       @game.stores[:wood] = 10
       assert @game.room.light_fire, true,  "Can fire be lit once forest is unlocked and has enough wood?"
-      assert @game.stores[:wood], 5, "Word is decremented correctly?"
+      assert @game.stores[:wood], 5, "Wood is decremented correctly?"
     end
   end
 

@@ -1,5 +1,3 @@
-class Tests; end
-
 class CraftingTests < Tests
   def unlocking_crafts_some_of_which_require_huts
     before do

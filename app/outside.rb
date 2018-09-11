@@ -142,6 +142,36 @@ class Outside
     true
   end
 
+  def title
+    return "a silent forest" if hut_count == 0
+
+    return "a lonely hut" if hut_count == 1
+
+    return "a tiny village" if hut_count <= 4
+
+    return "a modest village" if hut_count <= 8
+
+    return "a large village" if hut_count <= 14
+
+    "a raucous village"
+  end
+
+  def max_population
+    hut_count * 4
+  end
+
+  def wandering_group
+    group = ((roll * space_left.to_f / 2.0) + (space_left.to_f / 2.0)).floor
+
+    return 1 if group == 0
+
+    group
+  end
+
+  def space_left
+    max_population - @population
+  end
+
   def schedule_next_population_increase
     @increase_population_after = ((roll * (2.0 - 0.5) + 0.5).floor * 60) + 60
   end
@@ -158,6 +188,45 @@ class Outside
     return 20 if has_cart?
 
     30
+  end
+  def tick_thieves
+    return if !has? :compass
+    return if thieves_gone
+    return if thieves?
+    return if no_huts?
+    return if hut_count < 10
+
+    if @stores.keys.any? { |k| @stores[k] >= 2000 }
+      start_thieves
+    end
+  end
+
+  def forgive_thieves
+    return if !remove_thieves
+
+    @thieves_gone = true
+
+    @game.add_perk :stealthy
+  end
+
+  def remove_thieves
+    return false if @thieves_gone
+    @thieves_gone = true
+    true
+  end
+
+  def kill_thieves
+    return if !remove_thieves
+
+    @stores[:wood] += @thieves_stores[:wood]
+    @stores[:fur] += @thieves_stores[:fur]
+    @stores[:meat] += @thieves_stores[:meat]
+  end
+
+  def start_thieves
+    @thieves_stores[:wood] = 0
+    @thieves_stores[:fur] = 0
+    @thieves_stores[:meat] = 0
   end
 
   def gather_wood
@@ -194,10 +263,18 @@ class Outside
     !has? :hut
   end
 
+  def current_increase_population_ticks
+    @current_increase_population_ticks
+  end
+
   def thieves?
     return false if @thieves_gone
 
     !@thieves_stores[:wood].nil?
+  end
+
+  def increase_population_after
+    @increase_population_after
   end
 
   def income
@@ -206,6 +283,28 @@ class Outside
 
   def workers
     @workers
+  end
+
+  def increase_population
+    return if @population == max_population
+
+    result = wandering_group
+
+    if result == 1
+      @history << "a stranger arrives in the night."
+    elsif result < 5
+      @history << "a weathered family takes up in one of the huts."
+    elsif result < 10
+      @history << "a small group arrives, all dust and bones."
+    elsif result < 30
+      @history << "a convoy lurches in, equal parts worry and hope."
+    else
+      @history << "the town's booming. word does get around."
+    end
+
+    @population += result
+
+    @current_increase_population_ticks = 0
   end
 
   def allocate_worker worker
@@ -234,6 +333,36 @@ class Outside
 
   def has_population?
     @population > 1
+  end
+
+  def current_increase_population_ticks
+    @current_increase_population_ticks
+  end
+
+  def kill_population amount
+    amount = population if amount > @population
+    @population -= amount
+
+    if @population == 0
+      @population = 1
+      amount -= 1
+      amount = 0 if amount < 0 #sanity check that probably doesn't need to be here
+    end
+
+    amount_left = amount
+
+    @workers.keys.each do |key|
+      amount_to_deduct = amount_left
+
+      amount_to_deduct = @workers[key] if @workers[key] < amount_to_deduct
+
+      @workers[key] -= amount_to_deduct
+
+      amount_left -= amount_to_deduct
+    end
+
+    #no tests for this, ensures that population doesn't immediatly increase after deaths
+    @current_increase_population_ticks = 0
   end
 
   def hut_count
@@ -551,9 +680,13 @@ class Outside
   end
 
   def tick
+    # puts "tick"
+    # puts @current_increase_population_ticks
+    # puts @increase_population_after
     gather_wood_tick
     check_traps_tick
     tick_population
     tick_income
+    tick_thieves
   end
 end

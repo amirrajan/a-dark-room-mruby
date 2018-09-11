@@ -1,5 +1,3 @@
-class Tests; end
-
 class OutsideTests < Tests
   def define_tests
     before do
