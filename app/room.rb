@@ -44,21 +44,21 @@ class Room
     @forest_unlocked = false
 
     #if anything is added to this list, make sure to add an entry to game.rb/def order
-    # @crafts = {
-    #   :cart => Cart.new(@buildings),
-    #   :trap => Trap.new(@buildings),
-    #   :hut => Hut.new(@buildings),
-    #   :lodge => Lodge.new(@buildings),
-    #   :tradepost => Tradepost.new(@buildings),
-    #   :tannery => Tannery.new(@buildings),
-    #   :smokehouse => Smokehouse.new(@buildings),
-    #   :workshop => Workshop.new(@buildings),
-    #   :steelworks => Steelworks.new(@buildings),
-    #   :iron_mine => IronMine.new(@buildings),
-    #   :coal_mine => CoalMine.new(@buildings),
-    #   :sulphur_mine => SulphurMine.new(@buildings),
-    #   :armoury => Armoury.new(@buildings),
-    # }
+    @crafts = {
+      :cart => Cart.new(@buildings),
+      :trap => Trap.new(@buildings),
+      :hut => Hut.new(@buildings),
+      :lodge => Lodge.new(@buildings),
+      :tradepost => Tradepost.new(@buildings),
+      :tannery => Tannery.new(@buildings),
+      :smokehouse => Smokehouse.new(@buildings),
+      :workshop => Workshop.new(@buildings),
+      :steelworks => Steelworks.new(@buildings),
+      :iron_mine => IronMine.new(@buildings),
+      :coal_mine => CoalMine.new(@buildings),
+      :sulphur_mine => SulphurMine.new(@buildings),
+      :armoury => Armoury.new(@buildings),
+    }
 
     #if anything is added to this list, make sure to add an entry to game.rb/def order
     # @trades = {
@@ -101,6 +101,50 @@ class Room
     @available_crafts = Hash.new
     @available_trades = Hash.new
     @available_tools = Hash.new
+  end
+
+  def builder_ready
+    @builder_status = 4
+  end
+
+  def crafts
+    @crafts
+  end
+
+  def at_building_maximum? craft_key
+    at_purchasable_maximum? craft_key, @buildings, @crafts
+  end
+
+  def at_purchasable_maximum? key, quantity_lookup, maximum_lookup
+    quantity = quantity_lookup[key] || 0
+
+    return quantity >= maximum_lookup[key].maximum
+  end
+
+  def craft key, amount = 1
+    return false if !afford_craft? key
+
+    return false if at_building_maximum? key
+
+    @crafts[key].cost.keys.map do |material|
+      @stores[material] -= @crafts[key].cost[material]
+    end
+
+    @buildings[key] ||= 0
+
+    @buildings[key] += 1
+
+    if key ==:hut && @game.slaves?
+      @history << "saddened, builder puts up another hut." #not tested
+    else
+      @history << @crafts[key].build_message
+    end
+
+    true
+  end
+
+  def builder_ready?
+    @builder_status >= 4
   end
 
   def begining_of_game
@@ -178,6 +222,50 @@ class Room
     end
 
     @current_builder_status_ticks = 0
+  end
+
+  def unlock_crafts
+    return if begining_of_game
+
+    return if !builder_ready?
+
+    @crafts.keys.map { |key| unlock_craft key }
+  end
+
+  def see_purchaseable? purchasable
+    current_wood = @stores[:wood]
+
+    all_encountered = all_materials_encountered(purchasable.cost)
+
+    current_wood > purchasable.half_wood_cost and all_encountered
+  end
+
+  def all_materials_encountered cost
+    (cost.keys - @stores.keys).count == 0
+  end
+
+  def afford_craft? craft_key
+    @stores.afford? @crafts[craft_key].cost
+  end
+
+  def unlock_craft craft_key
+    return if @available_crafts[craft_key]
+
+    return if !see_purchaseable? @crafts[craft_key]
+
+    to_unlock = @crafts[craft_key]
+
+    return if !@buildings[:hut] and to_unlock.requires_hut?
+
+    if to_unlock.unlocks_workers?
+      to_unlock.workers.each { |worker| @workers[worker] ||= 0 }
+    end
+
+    @available_crafts[craft_key] = to_unlock
+
+    if to_unlock.buyable? and !@game.solo_run? #solo run scenario untested
+      @history << to_unlock.builder_message
+    end
   end
 
   def unlock_forest
@@ -306,4 +394,6 @@ class Room
       @previous_fire_state = @fire
     end
   end
+
+
 end

@@ -25,8 +25,8 @@ class Game
     @room = Room.new @history, @stores, @buildings, @workers, self
     # @events = Events.new self
     # @events.schedule
-    # @outside = Outside.new @history, @stores, @buildings, @workers, self
-    # @world = World.new self
+    @outside = Outside.new @history, @stores, @buildings, @workers, self
+    @world = World.new self
     # @game_state = GameState.new self
     # @cost_string = CostString.new
     @last_history_count = 0
@@ -40,9 +40,13 @@ class Game
     (@fastest_completion_ticks || 0) > 5
   end
 
+  def solo_run?
+    @outside.solo_run?
+  end
+
   def tick
     @room.tick
-    # @outside.tick
+    @outside.tick
     # @events.tick if(white_listed_modules.include? @active_module)
     # @world.tick
     # builder_gathers_wood

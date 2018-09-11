@@ -19,13 +19,9 @@ void handler(int sig)
   exit(1);
 }
 
-int main()
+void run_test_class(char *class_name, mrb_state *mrb)
 {
-  signal(SIGSEGV, handler);
-
-  mrb_state *mrb = mrb_open();
-  mrb_load_irep(mrb, main_ruby);
-  struct RClass *testClass = mrb_class_get(mrb, "RoomTests");
+  struct RClass *testClass = mrb_class_get(mrb, class_name);
   mrb_value tests =
     mrb_funcall(mrb,
 		mrb_obj_value(testClass),
@@ -40,6 +36,16 @@ int main()
   if (mrb->exc) {
     mrb_print_error(mrb);
   }
+}
+
+int main()
+{
+  signal(SIGSEGV, handler);
+
+  mrb_state *mrb = mrb_open();
+  mrb_load_irep(mrb, main_ruby);
+  run_test_class("RoomTests", mrb);
+  run_test_class("OutsideTests", mrb);
 
   mrb_close(mrb);
   return 0;
